@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Response
 import asyncio
 import os
@@ -98,7 +97,7 @@ def create_default_task(prompt: str):
     task.images_to_enhance_count = 0
     task.enhance_stats = {}
     task.generate_image_grid = False
-    
+
     task.steps = task.performance_selection.steps()
     task.original_steps = task.steps
 
