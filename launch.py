@@ -1,4 +1,3 @@
-
 import os
 import ssl
 import sys
@@ -145,23 +144,25 @@ def download_models(default_model, previous_default_models, checkpoint_downloads
 
 config.default_base_model_name, config.checkpoint_downloads = download_models(
     config.default_base_model_name, config.previous_default_models, config.checkpoint_downloads,
-    config.embeddings_downloads, config.loras_downloads, config.vae_downloads)
+    config.embeddings_downloads, config.lora_downloads, config.vae_downloads)
 
 config.update_files()
 init_cache(config.model_filenames, config.paths_checkpoints, config.lora_filenames, config.paths_loras)
 
 # Mount the API
-import gradio as gr
+import gradio.routes
 from api_wrapper import app as fastapi_app
 
-original_launch = gr.Blocks.launch
+print("Patching Gradio to mount API...")
 
-def mounted_launch(self, *args, **kwargs):
-    print("Mounting FastAPI app...")
-    gr.mount_gradio_app(self, fastapi_app, "/api")
+original_create_app = gradio.routes.App.create_app
+
+def new_create_app(self_routes_app):
+    app = original_create_app(self_routes_app)
+    app.mount("/api", fastapi_app)
     print("FastAPI app mounted on /api")
-    return original_launch(self, *args, **kwargs)
+    return app
 
-gr.Blocks.launch = mounted_launch
+gradio.routes.App.create_app = new_create_app
 
 from webui import *
